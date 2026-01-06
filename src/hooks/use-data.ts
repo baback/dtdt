@@ -82,6 +82,17 @@ export function useData() {
     return project;
   }, [currentWorkspaceId, fetchProjects]);
 
+  const updateProject = useCallback(async (id: string, name: string, color: string) => {
+    const res = await fetch(`/api/projects/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, color }),
+    });
+    const project: Project = await res.json();
+    await fetchProjects();
+    return project;
+  }, [fetchProjects]);
+
   const deleteProject = useCallback(async (id: string) => {
     await fetch(`/api/projects/${id}`, { method: 'DELETE' });
     await fetchProjects();
@@ -96,17 +107,28 @@ export function useData() {
     return data;
   }, [currentWorkspaceId, setTags]);
 
-  const createTag = useCallback(async (name: string, color?: string) => {
+  const createTag = useCallback(async (name: string, color?: string, icon?: string) => {
     if (!currentWorkspaceId) return null;
     const res = await fetch('/api/tags', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspace_id: currentWorkspaceId, name, color }),
+      body: JSON.stringify({ workspace_id: currentWorkspaceId, name, color, icon }),
     });
     const tag: Tag = await res.json();
     await fetchTags();
     return tag;
   }, [currentWorkspaceId, fetchTags]);
+
+  const updateTag = useCallback(async (id: string, name: string, color: string, icon: string) => {
+    const res = await fetch(`/api/tags/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, color, icon }),
+    });
+    const tag: Tag = await res.json();
+    await fetchTags();
+    return tag;
+  }, [fetchTags]);
 
   const deleteTag = useCallback(async (id: string) => {
     await fetch(`/api/tags/${id}`, { method: 'DELETE' });
@@ -181,9 +203,11 @@ export function useData() {
     deleteWorkspace,
     fetchProjects,
     createProject,
+    updateProject,
     deleteProject,
     fetchTags,
     createTag,
+    updateTag,
     deleteTag,
     fetchTasks,
     fetchPendingTasks,

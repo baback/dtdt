@@ -7,10 +7,21 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get('workspace_id');
   const pending = searchParams.get('pending');
+  const blockId = searchParams.get('block_id');
   
   let tasks;
   
-  if (pending === 'true' && workspaceId) {
+  if (blockId) {
+    // Get tasks for a specific block
+    const result = await sql`
+      SELECT t.*, p.name as project_name, p.color as project_color
+      FROM tasks t
+      JOIN projects p ON t.project_id = p.id
+      WHERE t.block_id = ${blockId}
+      ORDER BY t.created_at ASC
+    `;
+    tasks = result.rows;
+  } else if (pending === 'true' && workspaceId) {
     const result = await sql`
       SELECT t.*, p.name as project_name, p.color as project_color
       FROM tasks t
@@ -61,12 +72,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   await initDB();
-  const { project_id, title, description, scheduled_at, duration_minutes, tag_ids } = await request.json();
+  const { project_id, block_id, title, description, scheduled_at, duration_minutes, tag_ids } = await request.json();
   const id = uuid();
   
   await sql`
-    INSERT INTO tasks (id, project_id, title, description, scheduled_at, duration_minutes)
-    VALUES (${id}, ${project_id}, ${title}, ${description || null}, ${scheduled_at || null}, ${duration_minutes || null})
+    INSERT INTO tasks (id, project_id, block_id, title, description, scheduled_at, duration_minutes)
+    VALUES (${id}, ${project_id}, ${block_id || null}, ${title}, ${description || null}, ${scheduled_at || null}, ${duration_minutes || null})
   `;
   
   // Add tags

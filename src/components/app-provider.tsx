@@ -26,8 +26,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (ws) {
           setCurrentWorkspaceId(ws.id);
         }
-      } else if (!currentWorkspaceId) {
-        setCurrentWorkspaceId(workspaces[0].id);
+      } else {
+        // Validate current workspace ID exists, otherwise use first workspace
+        const validWorkspace = workspaces.find(ws => ws.id === currentWorkspaceId);
+        if (!validWorkspace) {
+          setCurrentWorkspaceId(workspaces[0].id);
+        }
       }
     };
 

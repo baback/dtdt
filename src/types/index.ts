@@ -17,6 +17,7 @@ export interface Tag {
   workspace_id: string;
   name: string;
   color: string;
+  icon: string;
 }
 
 export interface Task {
@@ -43,6 +44,18 @@ export interface TimerSession {
   task_id: string | null;
   started_at: string;
   duration_seconds: number;
+}
+
+export interface DayBlock {
+  id: string;
+  workspace_id: string;
+  date: string;
+  start_hour: number;
+  end_hour: number;
+  project_id: string | null;
+  project_name: string | null;
+  project_color: string | null;
+  sort_order: number;
 }
 
 export type CalendarView = 'list' | 'day' | 'week' | 'month';

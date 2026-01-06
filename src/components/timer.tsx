@@ -146,8 +146,6 @@ export function Timer() {
   };
 
   const progress = ((timerDuration - timerRemaining) / timerDuration) * 100;
-  const circumference = 2 * Math.PI * 45;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
   const currentMinutes = Math.ceil(timerDuration / 60);
   const isPreset = PRESET_TIMES.some(p => p.minutes * 60 === timerDuration);
 
@@ -331,7 +329,7 @@ export function Timer() {
   };
 
   return (
-    <div className="border rounded-xl p-5 bg-card shadow-sm">
+    <div className="border rounded-xl p-5 bg-card shadow-sm flex-1 flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Focus Timer</h3>
         <div className="flex items-center gap-2">
@@ -350,35 +348,35 @@ export function Timer() {
       </div>
 
       {/* Circular Progress */}
-      <div className="flex justify-center mb-4">
-        <div className="relative w-32 h-32">
+      <div className="flex justify-center mb-6">
+        <div className="relative w-44 h-44">
           <svg className="w-full h-full transform -rotate-90">
             <circle
-              cx="64"
-              cy="64"
-              r="45"
+              cx="88"
+              cy="88"
+              r="70"
               stroke="currentColor"
-              strokeWidth="8"
+              strokeWidth="10"
               fill="none"
               className="text-muted"
             />
             <circle
-              cx="64"
-              cy="64"
-              r="45"
+              cx="88"
+              cy="88"
+              r="70"
               stroke="currentColor"
-              strokeWidth="8"
+              strokeWidth="10"
               fill="none"
               strokeLinecap="round"
               className="text-primary transition-all duration-1000"
               style={{
-                strokeDasharray: circumference,
-                strokeDashoffset: strokeDashoffset,
+                strokeDasharray: 2 * Math.PI * 70,
+                strokeDashoffset: 2 * Math.PI * 70 - (progress / 100) * 2 * Math.PI * 70,
               }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-3xl font-mono font-bold tabular-nums">
+            <span className="text-2xl font-mono font-medium tabular-nums text-muted-foreground">
               {formatTime(timerRemaining)}
             </span>
           </div>

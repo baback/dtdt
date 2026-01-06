@@ -1,7 +1,7 @@
 'use client';
 
 import { Sidebar } from '@/components/sidebar';
-import { CalendarView } from '@/components/calendar';
+import { DayPlanner } from '@/components/day-planner';
 import { Timer } from '@/components/timer';
 import { TaskModal } from '@/components/task-modal';
 import { CreateTaskModal } from '@/components/create-task-modal';
@@ -17,7 +17,7 @@ export default function Home() {
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {currentWorkspaceId ? (
-          <CalendarView />
+          <DayPlanner />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             Select or create a workspace to get started
@@ -25,7 +25,7 @@ export default function Home() {
         )}
       </div>
 
-      <div className="w-80 border-l p-4 bg-muted/30 flex-shrink-0">
+      <div className="w-80 border-l p-4 bg-muted/30 shrink-0 flex flex-col h-full">
         <Timer />
       </div>
 

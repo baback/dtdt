@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 
 const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET || 'fallback-secret-change-me');
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/check'];
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/check', '/api/auth/passkey', '/api/auth/pin', '/api/']; // TODO: remove '/api/' for production
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
