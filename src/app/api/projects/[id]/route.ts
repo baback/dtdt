@@ -1,27 +1,30 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { sql, initDB } from '@/lib/db';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
-  if (!project) {
+  const { rows } = await sql`SELECT * FROM projects WHERE id = ${id}`;
+  if (rows.length === 0) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
-  return NextResponse.json(project);
+  return NextResponse.json(rows[0]);
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
   const { name, color } = await request.json();
   
-  db.prepare('UPDATE projects SET name = ?, color = ? WHERE id = ?').run(name, color, id);
+  await sql`UPDATE projects SET name = ${name}, color = ${color} WHERE id = ${id}`;
   
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
-  return NextResponse.json(project);
+  const { rows } = await sql`SELECT * FROM projects WHERE id = ${id}`;
+  return NextResponse.json(rows[0]);
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
-  db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+  await sql`DELETE FROM projects WHERE id = ${id}`;
   return NextResponse.json({ success: true });
 }

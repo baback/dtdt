@@ -1,89 +1,94 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
+import { sql, initDB } from '@/lib/db';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
   
-  const task = db.prepare(`
+  const { rows } = await sql`
     SELECT t.*, p.name as project_name, p.color as project_color
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
-    WHERE t.id = ?
-  `).get(id) as Record<string, unknown> | undefined;
+    WHERE t.id = ${id}
+  `;
   
-  if (!task) {
+  if (rows.length === 0) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
   
-  const tags = db.prepare(`
+  const { rows: tags } = await sql`
     SELECT tg.* FROM tags tg
     JOIN task_tags tt ON tg.id = tt.tag_id
-    WHERE tt.task_id = ?
-  `).all(id);
+    WHERE tt.task_id = ${id}
+  `;
   
   return NextResponse.json({
-    ...task,
-    project: { id: task.project_id, name: task.project_name, color: task.project_color },
+    ...rows[0],
+    project: { id: rows[0].project_id, name: rows[0].project_name, color: rows[0].project_color },
     tags
   });
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
-  const { title, description, scheduled_at, duration_minutes, status, project_id, tag_ids } = await request.json();
+  const body = await request.json();
+  const { title, description, scheduled_at, duration_minutes, status, project_id, tag_ids } = body;
   
-  const updates: string[] = [];
-  const values: (string | number | null)[] = [];
-  
-  if (title !== undefined) { updates.push('title = ?'); values.push(title); }
-  if (description !== undefined) { updates.push('description = ?'); values.push(description); }
-  if (scheduled_at !== undefined) { updates.push('scheduled_at = ?'); values.push(scheduled_at); }
-  if (duration_minutes !== undefined) { updates.push('duration_minutes = ?'); values.push(duration_minutes); }
-  if (project_id !== undefined) { updates.push('project_id = ?'); values.push(project_id); }
-  if (status !== undefined) {
-    updates.push('status = ?');
-    values.push(status);
-    if (status === 'done') {
-      updates.push('completed_at = datetime("now")');
-    }
+  // Build dynamic update
+  if (title !== undefined) {
+    await sql`UPDATE tasks SET title = ${title} WHERE id = ${id}`;
   }
-  
-  if (updates.length > 0) {
-    values.push(id);
-    db.prepare(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+  if (description !== undefined) {
+    await sql`UPDATE tasks SET description = ${description} WHERE id = ${id}`;
+  }
+  if (scheduled_at !== undefined) {
+    await sql`UPDATE tasks SET scheduled_at = ${scheduled_at} WHERE id = ${id}`;
+  }
+  if (duration_minutes !== undefined) {
+    await sql`UPDATE tasks SET duration_minutes = ${duration_minutes} WHERE id = ${id}`;
+  }
+  if (project_id !== undefined) {
+    await sql`UPDATE tasks SET project_id = ${project_id} WHERE id = ${id}`;
+  }
+  if (status !== undefined) {
+    await sql`UPDATE tasks SET status = ${status} WHERE id = ${id}`;
+    if (status === 'done') {
+      await sql`UPDATE tasks SET completed_at = NOW() WHERE id = ${id}`;
+    }
   }
   
   // Update tags
   if (tag_ids !== undefined) {
-    db.prepare('DELETE FROM task_tags WHERE task_id = ?').run(id);
-    const insertTag = db.prepare('INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)');
+    await sql`DELETE FROM task_tags WHERE task_id = ${id}`;
     for (const tagId of tag_ids) {
-      insertTag.run(id, tagId);
+      await sql`INSERT INTO task_tags (task_id, tag_id) VALUES (${id}, ${tagId})`;
     }
   }
   
-  const task = db.prepare(`
+  const { rows } = await sql`
     SELECT t.*, p.name as project_name, p.color as project_color
     FROM tasks t
     JOIN projects p ON t.project_id = p.id
-    WHERE t.id = ?
-  `).get(id) as Record<string, unknown>;
+    WHERE t.id = ${id}
+  `;
   
-  const tags = db.prepare(`
+  const { rows: tags } = await sql`
     SELECT tg.* FROM tags tg
     JOIN task_tags tt ON tg.id = tt.tag_id
-    WHERE tt.task_id = ?
-  `).all(id);
+    WHERE tt.task_id = ${id}
+  `;
   
   return NextResponse.json({
-    ...task,
-    project: { id: task.project_id, name: task.project_name, color: task.project_color },
+    ...rows[0],
+    project: { id: rows[0].project_id, name: rows[0].project_name, color: rows[0].project_color },
     tags
   });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await initDB();
   const { id } = await params;
-  db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  await sql`DELETE FROM tasks WHERE id = ${id}`;
   return NextResponse.json({ success: true });
 }
