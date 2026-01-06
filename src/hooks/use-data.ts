@@ -16,21 +16,33 @@ export function useData() {
   } = useAppStore();
 
   const fetchWorkspaces = useCallback(async () => {
-    const res = await fetch('/api/workspaces');
-    const data: Workspace[] = await res.json();
-    setWorkspaces(data);
-    return data;
+    try {
+      const res = await fetch('/api/workspaces');
+      if (!res.ok) throw new Error('Failed to fetch workspaces');
+      const data: Workspace[] = await res.json();
+      setWorkspaces(data);
+      return data;
+    } catch (error) {
+      console.error('fetchWorkspaces error:', error);
+      return [];
+    }
   }, [setWorkspaces]);
 
   const createWorkspace = useCallback(async (name: string) => {
-    const res = await fetch('/api/workspaces', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    const workspace: Workspace = await res.json();
-    await fetchWorkspaces();
-    return workspace;
+    try {
+      const res = await fetch('/api/workspaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error('Failed to create workspace');
+      const workspace: Workspace = await res.json();
+      await fetchWorkspaces();
+      return workspace;
+    } catch (error) {
+      console.error('createWorkspace error:', error);
+      return null;
+    }
   }, [fetchWorkspaces]);
 
   const updateWorkspace = useCallback(async (id: string, name: string) => {
